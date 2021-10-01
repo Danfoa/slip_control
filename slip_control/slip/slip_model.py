@@ -156,17 +156,15 @@ class SlipModel:
         assert polar_traj.shape[0] == 4, 'Provide a valid (4, k) polar trajectory: %s' % polar_traj.shape
         if polar_traj.ndim == 1:
             polar_traj = np.expand_dims(polar_traj, axis=1)
-            u_ctrl = control_signal
+
+        if control_signal is None:
+            u_ctrl = np.zeros((2, polar_traj.shape[-1]))
         else:
-            if control_signal is None:
-                u_ctrl = np.zeros((2, polar_traj.shape[(-1)]))
-            else:
-                u_ctrl = np.array(control_signal)
-            if u_ctrl.ndim == 1:
-                u_ctrl = np.expand_dims(u_ctrl, axis=1)
-            assert u_ctrl.shape[0] == 2, 'Provide a valid (2, k) control input vector'
-            assert polar_traj.shape[1] == u_ctrl.shape[1], 'Len of trajectory: polar = %d | control_input = %d' % (
-                polar_traj.shape[1], u_ctrl.shape[1])
+            u_ctrl = np.expand_dims(control_signal, axis=1) if control_signal.ndim == 1 else np.array(control_signal)
+
+        assert u_ctrl.shape[0] == 2, 'Provide a valid (2, k) control input vector'
+        assert polar_traj.shape[1] == u_ctrl.shape[1], 'Len of trajectory: polar = %d | control_input = %d' % \
+                                                       (polar_traj.shape[1], u_ctrl.shape[1])
         theta = polar_traj[0, :]
         theta_dot = polar_traj[1, :]
         r = polar_traj[2, :]

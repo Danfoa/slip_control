@@ -57,6 +57,17 @@ class SlipDiffFlatController:
     def generate_slip_trajectory_tree(self, initial_state, desired_gait_cycles=np.inf, desired_duration=np.inf,
                                       look_ahead_cycles=0, max_samples_per_cycle=20, angle_epsilon=np.deg2rad(1),
                                       verbose=True) -> TrajectoryTreeNode:
+        """
+        Generate a trajectory tree by testing and controlling multiple touch down angles per gait cycle
+        :param initial_state: Initial cartesian state assumed to be part of a flight phase
+        :param desired_gait_cycles: Number of gait cycles to plan for
+        :param desired_duration: Maximum time of a trajectory to be returned
+        :param look_ahead_cycles: Number of gait cycles in the future to look for when planning.
+        :param max_samples_per_cycle: Maximum number of touch down angles evaluated per gait cycle
+        :param angle_epsilon: Minimum difference in touch down angle to consider optimal
+        :param verbose:
+        :return: A trajectory tree with all the evaluated trajectories.
+        """
         assert xor(np.isinf(desired_gait_cycles), np.isinf(
             desired_duration)), 'Provide ONE stopping criteria: `desired_gait_cycles` or `desired_duration`'
         opt_start = time.time()

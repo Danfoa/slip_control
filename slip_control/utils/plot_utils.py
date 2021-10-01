@@ -57,7 +57,7 @@ def plot_cartesian_trajectory(traj, t, target_state=None, foot_pos=None, touch_d
 
             if touch_down_angle is not None:
                 xz_ax.text(foot_pos + 0.01, 0.05, '%.1f°' % touch_down_angle)
-        xz_ax.grid('on', alpha=0.3)
+        xz_ax.grid('on', alpha=0.15)
         xz_ax.set_ylim(bottom=0.0, auto=True)
         xz_ax.set_xlabel('$\\mathbf{y[m]}$', fontweight='bold', fontsize=LABEL_FONT_SIZE)
         xz_ax.set_ylabel('$\\mathbf{z[m]}$', fontweight='bold', fontsize=LABEL_FONT_SIZE)
@@ -71,7 +71,7 @@ def plot_cartesian_trajectory(traj, t, target_state=None, foot_pos=None, touch_d
         ax.set_ylabel((x_titles[i]), fontweight='bold', fontsize=LABEL_FONT_SIZE)
         if i == len(x_axs) - 1:
             ax.set_xlabel('t[s]', fontweight='bold', fontsize=LABEL_FONT_SIZE)
-        ax.grid('on', alpha=0.3)
+        ax.grid('on', alpha=0.15)
         ax.set_xlim(xmin=0.0, auto=True)
 
     z_titles = ['$\\mathbf{z [m]}$', '$\\mathbf{\\dot{z} [m/s]}$', '$\\mathbf{\\ddot{z} [m/s^2]}$']
@@ -82,7 +82,7 @@ def plot_cartesian_trajectory(traj, t, target_state=None, foot_pos=None, touch_d
         ax.set_ylabel((z_titles[i]), fontweight='bold', fontsize=LABEL_FONT_SIZE)
         if i == len(z_axs) - 1:
             ax.set_xlabel('t[s]', fontweight='bold', fontsize=LABEL_FONT_SIZE)
-        ax.grid('on', alpha=0.3)
+        ax.grid('on', alpha=0.15)
         ax.set_xlim(xmin=0.0, auto=True)
 
     return (fig, plt_axs)
@@ -109,7 +109,7 @@ def plot_polar_trajectory(polar_traj, t, target_state=None, axs=None, color='k',
         ax.plot((t[0]), (polar_traj[(i + 2, 0)]), color=color, marker='o', markersize='6', markeredgecolor='k')
         ax.plot((t[(-1)]), (target_state[(i + 2)]), 'D', color=target_color, markersize='10')
         ax.set_ylabel((y_titles[i]), rotation=0)
-        ax.grid('on', alpha=0.3)
+        ax.grid('on', alpha=0.15)
 
     z_titles = ['$\\theta$', '$\\dot{\\theta}$', '$\\ddot{\\theta}$']
     for i, ax in enumerate(theta_axs.flatten()):
@@ -117,7 +117,7 @@ def plot_polar_trajectory(polar_traj, t, target_state=None, axs=None, color='k',
         ax.plot((t[0]), (np.rad2deg(polar_traj[(i, 0)])), color=color, marker='o', markersize='6', markeredgecolor='k')
         ax.plot((t[(-1)]), (np.rad2deg(target_state[i])), 'D', color=target_color, markersize='10')
         ax.set_ylabel((z_titles[i]), rotation=0)
-        ax.grid('on', alpha=0.3)
+        ax.grid('on', alpha=0.15)
 
     return (
         fig, axs)
@@ -141,7 +141,7 @@ def plot_control_trajectory(u_traj, t, theta, r, r0, k, axs=None, color='k', lab
     ax.plot(t, displacement, 'k-o', label=label, color=color, markersize=marker_size, linestyle=linestyle,
             marker=marker)
     ax.set_ylabel('Displacement [m]')
-    ax.grid('on', alpha=0.3)
+    ax.grid('on', alpha=0.15)
     ax = extension_ax[1]
     ax.set_title('Leg length displacement $u_{1}$')
     resultant_force = k * (r0 - r + u_traj[0, :])
@@ -155,13 +155,13 @@ def plot_control_trajectory(u_traj, t, theta, r, r0, k, axs=None, color='k', lab
     ax.fill_between((theta * 180 / np.pi), resultant_force, passive_force, alpha=0.1, color=color)
     ax.set_ylabel('Radial Force [m]')
     ax.set_xlabel('Hip angle $\\theta$ [Deg]')
-    ax.grid('on', alpha=0.3)
+    ax.grid('on', alpha=0.15)
     ax = torque_ax[0]
     ax.set_title('Hip torque $u_{2}$')
     ax.plot(t, hip_torque, 'k-o', label=label, color=color, markersize=marker_size, linestyle=linestyle, marker=marker)
     ax.set_ylabel('Torque [Nm]')
     ax.set_xlabel('Time [s]')
-    ax.grid('on', alpha=0.3)
+    ax.grid('on', alpha=0.15)
     ax = torque_ax[1]
     ax.set_title('Hip torque $u_{2}$ vs $\\theta$')
     ax.plot((theta * 180 / np.pi), hip_torque, 'k-o', label=label, color=color, markersize=marker_size,
@@ -170,7 +170,7 @@ def plot_control_trajectory(u_traj, t, theta, r, r0, k, axs=None, color='k', lab
     ax.fill_between((theta * 180 / np.pi), hip_torque, alpha=0.1, color=color)
     ax.set_ylabel('Torque [Nm]')
     ax.set_xlabel('Hip angle $\\theta$ [Deg]')
-    ax.grid('on', alpha=0.3)
+    ax.grid('on', alpha=0.15)
     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     return (
         fig, axs)
@@ -229,96 +229,75 @@ def plot_slip_trajectory(slip_traj: Union[(SlipTrajectory, SlipGaitCycleCtrl)], 
     return plt_axs
 
 
-def plot_limit_cycles(slip_traj: SlipTrajectory, start_cycle=0, axs=None, cmap_name='copper'):
-    print(('Plotting slip_traj limit gait_cycle for %d cycles...' % slip_traj.num_cycles), end='')
-    fig_size = (15, 10)
+def plot_limit_cycles(slip_traj: SlipTrajectory, axs=None, cmap_name='copper', fig_size=(15, 10)):
     LABEL_FONT_SIZE = 12
     cmap = plt.cm.get_cmap(cmap_name)
-    if axs is None:
-        fig, axs = plt.subplots(4, 3, figsize=fig_size)
 
     def plot_limit_cycle_metric(x_flight, y_flight, x_stance, y_stance, x_name, y_name, flight_phase, stance_phase, ax,
                                 ax2, ax3, color):
         if x_flight is not None:
             ax.plot(x_flight, y_flight, label=label, color=color, markersize=marker_size, linestyle='dotted')
-        else:
-            ax.plot(x_stance, y_stance, label=label, color=color, markersize=marker_size, linestyle='-')
-            ax.plot((x_stance[0]), (y_stance[0]), 'D', color=color, markersize='6', markeredgecolor='k')
-            ax.plot((x_stance[(-1)]), (y_stance[(-1)]), 'X', color=color, markersize='6', markeredgecolor='k')
-            ax.set_xlabel(x_name, fontweight='bold', fontsize=LABEL_FONT_SIZE)
-            ax.set_ylabel(y_name, fontweight='bold', fontsize=LABEL_FONT_SIZE)
-            ax.grid('on', alpha=0.3)
-            if x_flight is not None:
-                ax2.plot(flight_phase, y_flight, label=label, color=color, markersize=marker_size, linestyle='dotted')
-            ax2.plot((stance_phase[0]), (y_stance[0]), 'D', color=color, markersize='6', markeredgecolor='k')
-            ax2.plot((stance_phase[(-1)]), (y_stance[(-1)]), 'X', color=color, markersize='6', markeredgecolor='k')
-            ax2.plot(stance_phase, y_stance, label=label, color=color, markersize=marker_size, linestyle='-')
-            ax2.set_ylabel(y_name, fontweight='bold', fontsize=LABEL_FONT_SIZE)
-            ax2.set_xlabel('$\\phi$', fontweight='bold', fontsize=LABEL_FONT_SIZE)
-            ax2.grid('on', alpha=0.8)
-            if x_flight is not None:
-                ax3.plot(flight_phase, x_flight, label=label, color=color, markersize=marker_size, linestyle='dotted')
-        ax3.plot((stance_phase[0]), (x_stance[0]), 'D', color=color, markersize='6', markeredgecolor='k')
-        ax3.plot((stance_phase[(-1)]), (x_stance[(-1)]), 'X', color=color, markersize='6', markeredgecolor='k')
+        ax.plot(x_stance, y_stance, label=label, color=color, markersize=marker_size, linestyle='-')
+        ax.plot((x_stance[0]), (y_stance[0]), 'D', color=color, markersize='4', markeredgecolor='k')
+        ax.plot((x_stance[(-1)]), (y_stance[(-1)]), 'X', color=color, markersize='4', markeredgecolor='k')
+        ax.set_xlabel(x_name, fontweight='bold', fontsize=LABEL_FONT_SIZE)
+        ax.set_ylabel(y_name, fontweight='bold', fontsize=LABEL_FONT_SIZE)
+        ax.grid('on', alpha=0.15)
+        if x_flight is not None:
+            ax2.plot(flight_phase, y_flight, label=label, color=color, markersize=marker_size, linestyle='dotted')
+        ax2.plot(stance_phase, y_stance, label=label, color=color, markersize=marker_size, linestyle='-')
+        ax2.plot((stance_phase[0]), (y_stance[0]), 'D', color=color, markersize='4', markeredgecolor='k')
+        ax2.plot((stance_phase[(-1)]), (y_stance[(-1)]), 'X', color=color, markersize='4', markeredgecolor='k')
+        ax2.set_ylabel(y_name, fontweight='bold', fontsize=LABEL_FONT_SIZE)
+        ax2.set_xlabel('$\\phi$', fontweight='bold', fontsize=LABEL_FONT_SIZE)
+        ax2.grid('on', alpha=0.15)
+        if x_flight is not None:
+            ax3.plot(flight_phase, x_flight, label=label, color=color, markersize=marker_size, linestyle='dotted')
         ax3.plot(stance_phase, x_stance, label=label, color=color, markersize=marker_size, linestyle='-')
+        ax3.plot((stance_phase[0]), (x_stance[0]), 'D', color=color, markersize='4', markeredgecolor='k')
+        ax3.plot((stance_phase[(-1)]), (x_stance[(-1)]), 'X', color=color, markersize='4', markeredgecolor='k')
         ax3.set_ylabel(x_name, fontweight='bold', fontsize=LABEL_FONT_SIZE)
         ax3.set_xlabel('$\\phi$', fontweight='bold', fontsize=LABEL_FONT_SIZE)
-        ax3.grid('on', alpha=0.8)
+        ax3.grid('on', alpha=0.15)
 
-    for cycle in range(start_cycle, slip_traj.num_cycles):
-        color = cmap(cycle / slip_traj.num_cycles)
+    if axs is None:
+        fig, axs = plt.subplots(4, 3, figsize=fig_size)
+
+    for i, cycle in enumerate(slip_traj.gait_cycles):
+        color = cmap(i / len(slip_traj))
         marker_size = 1
         label = None
-        flight_traj = slip_traj.flight_traj[cycle]
-        stance_traj = slip_traj.stance_traj[cycle]
-        stance_traj_polar = slip_traj.stance_polar_traj[cycle]
-        flight_phase = slip_traj.get_gait_phase(
-            np.linspace(start=(slip_traj.flight_times[cycle][0]), stop=(slip_traj.flight_times[cycle][(-1)]),
-                        num=(len(flight_traj[Z_DOT]))))
-        stance_phase = slip_traj.get_gait_phase(
-            np.linspace(start=(slip_traj.stance_times[cycle][0]), stop=(slip_traj.stance_times[cycle][(-2)]),
-                        num=(len(stance_traj[Z_DOT]))))
-        plot_limit_cycle_metric(x_flight=(flight_traj[X_DOT]), y_flight=(flight_traj[Z_DOT]),
-                                x_stance=(stance_traj[X_DOT]),
-                                y_stance=(stance_traj[Z_DOT]),
-                                x_name='$\\dot{y}[m/s]}$',
-                                y_name='$\\dot{z}[m/s]}$',
-                                flight_phase=flight_phase,
-                                stance_phase=stance_phase,
-                                ax=(axs[(0, 0)]),
-                                ax2=(axs[(0, 1)]),
-                                ax3=(axs[(0, 2)]),
-                                color=color)
-        plot_limit_cycle_metric(x_flight=(flight_traj[X_DDOT]), y_flight=(flight_traj[Z_DDOT]),
-                                x_stance=(stance_traj[X_DDOT]),
-                                y_stance=(stance_traj[Z_DDOT]),
-                                x_name='$\\ddot{y}[m/s]}$',
-                                y_name='$\\ddot{z}[m/s]}$',
-                                flight_phase=flight_phase,
-                                stance_phase=stance_phase,
-                                ax=(axs[(1, 0)]),
-                                ax2=(axs[(1, 1)]),
-                                ax3=(axs[(1, 2)]),
-                                color=color)
-        plot_limit_cycle_metric(x_flight=None, y_flight=None, x_stance=(np.rad2deg(stance_traj_polar[THETA])),
-                                y_stance=(stance_traj_polar[R]),
-                                x_name='$\\theta[deg]$',
-                                y_name='$r[m]$',
-                                flight_phase=flight_phase,
-                                stance_phase=stance_phase,
-                                ax=(axs[(2, 0)]),
-                                ax2=(axs[(2, 1)]),
-                                ax3=(axs[(2, 2)]),
-                                color=color)
-        plot_limit_cycle_metric(x_flight=None, y_flight=None, x_stance=(np.rad2deg(stance_traj_polar[THETA_DOT])),
-                                y_stance=(stance_traj_polar[R_DOT]),
-                                x_name='$\\dot{\\theta}[deg/s]$',
-                                y_name='$\\dot{r}[m/s]$',
-                                flight_phase=flight_phase,
-                                stance_phase=stance_phase,
-                                ax=(axs[(3, 0)]),
-                                ax2=(axs[(3, 1)]),
-                                ax3=(axs[(3, 2)]),
-                                color=color)
+        flight_traj = cycle.flight_cartesian_traj
+        stance_traj = cycle.stance_cartesian_traj
+        stance_traj_polar = cycle.stance_polar_traj
 
+        flight_phase = slip_traj.get_gait_phase(np.linspace(start=cycle.t_flight[0], stop=cycle.t_flight[-1],
+                                                            num=len(cycle.t_flight)))
+        stance_phase = slip_traj.get_gait_phase(np.linspace(start=cycle.t_stance[0], stop=cycle.t_stance[-2],
+                                                            num=len(cycle.t_stance)))
+
+        plot_limit_cycle_metric(x_flight=(flight_traj[X_DOT]), y_flight=(flight_traj[Z_DOT]),
+                                x_stance=(stance_traj[X_DOT]), y_stance=(stance_traj[Z_DOT]),
+                                x_name='$\\dot{x}[m/s]}$', y_name='$\\dot{z}[m/s]}$',
+                                flight_phase=flight_phase, stance_phase=stance_phase,
+                                ax=(axs[(0, 0)]), ax2=(axs[(0, 1)]), ax3=(axs[(0, 2)]), color=color)
+        plot_limit_cycle_metric(x_flight=(flight_traj[X_DDOT]), y_flight=(flight_traj[Z_DDOT]),
+                                x_stance=(stance_traj[X_DDOT]), y_stance=(stance_traj[Z_DDOT]),
+                                x_name='$\\ddot{x}[m/s]}$', y_name='$\\ddot{z}[m/s]}$',
+                                flight_phase=flight_phase, stance_phase=stance_phase,
+                                ax=(axs[(1, 0)]), ax2=(axs[(1, 1)]), ax3=(axs[(1, 2)]),
+                                color=color)
+        plot_limit_cycle_metric(x_flight=None, y_flight=None,
+                                x_stance=(np.rad2deg(stance_traj_polar[THETA])), y_stance=(stance_traj_polar[R]),
+                                x_name='$\\theta[deg]$', y_name='$r[m]$',
+                                flight_phase=flight_phase, stance_phase=stance_phase,
+                                ax=(axs[(2, 0)]), ax2=(axs[(2, 1)]), ax3=(axs[(2, 2)]),
+                                color=color)
+        plot_limit_cycle_metric(x_flight=None, y_flight=None,
+                                x_stance=(np.rad2deg(stance_traj_polar[THETA_DOT])), y_stance=(stance_traj_polar[R_DOT]),
+                                x_name='$\\dot{\\theta}[deg/s]$', y_name='$\\dot{r}[m/s]$',
+                                flight_phase=flight_phase, stance_phase=stance_phase,
+                                ax=(axs[(3, 0)]), ax2=(axs[(3, 1)]), ax3=(axs[(3, 2)]),
+                                color=color)
+    plt.tight_layout()
     return axs

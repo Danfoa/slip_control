@@ -160,25 +160,25 @@ class SlipGaitCycleCtrl(SlipGaitCycle):
     @property
     def stance_cartesian_traj(self) -> ndarray:
         if self._stance_cartesian_traj is None:
-            self._stance_cartesian_traj = self.slip_model.polar_to_cartesian(trajectory=(self.stance_polar_traj),
-                                                                             control_signal=(self.control_signal),
-                                                                             foot_contact_pos=(self.foot_contact_pos))
+            self._stance_cartesian_traj = self.slip_model.polar_to_cartesian(trajectory=self.stance_polar_traj,
+                                                                             control_signal=self.control_signal,
+                                                                             foot_contact_pos=self.foot_contact_pos)
         return self._stance_cartesian_traj
 
     @property
     def take_off_state(self) -> ndarray:
         if self._stance_cartesian_traj is None:
-            return self.slip_model.polar_to_cartesian((self.stance_polar_traj[:, -1]),
-                                                      control_signal=(self.control_signal[:, -1]),
-                                                      foot_contact_pos=(self.foot_contact_pos))
+            return self.slip_model.polar_to_cartesian(self.stance_polar_traj[:, -1],
+                                                      control_signal=self.control_signal[:, -1],
+                                                      foot_contact_pos=self.foot_contact_pos)
         else:
             return np.array(self.stance_cartesian_traj[:, -1])
 
     @property
     def touch_down_state(self):
         if self._stance_cartesian_traj is None:
-            return self.slip_model.polar_to_cartesian((self.stance_polar_traj[:, 0]),
-                                                      control_signal=(self.control_signal[:, 0]),
-                                                      foot_contact_pos=(self.foot_contact_pos))
+            return self.slip_model.polar_to_cartesian(self.stance_polar_traj[:, 0],
+                                                      control_signal=self.control_signal[:, 0],
+                                                      foot_contact_pos=self.foot_contact_pos)
         else:
             return np.array(self.stance_cartesian_traj[:, 0])

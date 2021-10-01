@@ -71,7 +71,7 @@ class TrajectoryTreeNode:
         td_angles = list(self.child_nodes.keys())
         costs = [node.compute_opt_cost() for node in self.child_nodes.values()]
         if np.all(np.isnan(costs)):
-            self._optimal_td_angle = td_angles[(-1)]
+            best_branch_idx = 0
         else:
             best_branch_idx = np.nanargmin(costs)
         self._optimal_td_angle = td_angles[best_branch_idx]
@@ -148,4 +148,3 @@ class TrajectoryTreeNode:
             outer_pbar.update()
 
         outer_pbar.close()
-        return plt_axs.get_figure()

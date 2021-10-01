@@ -138,9 +138,9 @@ class SlipTrajectory:
             touch_down_time = cycle.t_flight[(-1)]
             t.extend([cycle.start_time, touch_down_time, cycle.end_time - dt])
 
-        t.append(self.end_time)
+        # t.append(self.end_time)
         gait_cycle_phase = np.linspace(0, 2 * np.pi, 3)
-        period_cycle_phase = np.concatenate([gait_cycle_phase] * len(self) + gait_cycle_phase[(-1)])
+        period_cycle_phase = np.concatenate([gait_cycle_phase] * len(self))
         continuous_gait_phase_signal = interp1d(x=t, y=period_cycle_phase, kind='linear', fill_value='extrapolate',
                                                 assume_sorted=True)
         return continuous_gait_phase_signal

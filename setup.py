@@ -5,11 +5,12 @@
 # @email   : daniels.ordonez@gmail.com
 
 from distutils.core import setup
+from setuptools import find_packages
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-setup(name='slip_control',
+setup(name='slip-control',
       version='0.0.1',
       description='Spring Loaded Inverted Pendulum control and visualization python tools',
       long_description=long_description,
@@ -17,8 +18,7 @@ setup(name='slip_control',
       author='Daniel Ordonez',
       author_email='daniel.ordonez@gmail.com',
       url='https://github.com/Danfoa/slip_control',
-      packages=['slip', 'controllers', 'utils'],
-      package_dir={'': "slip_control"},
+      packages=find_packages(),
       classifiers=[
           "Programming Language :: Python :: 3",
           "License :: OSI Approved :: MIT License",

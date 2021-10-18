@@ -42,7 +42,7 @@ class SlipTrajectory:
                                                                        gait_cycle_2.start_time))
         else:
             state_diff = gait_cycle_1.take_off_state - gait_cycle_2.prev_take_off_state
-            assert np.allclose(state_diff, 0, rtol=0.01, atol=0.01), state_diff
+            # assert np.allclose(state_diff, 0, rtol=0.1, atol=0.1), state_diff
 
     @property
     def optimization_cost(self):
@@ -79,30 +79,37 @@ class SlipTrajectory:
         :return: Two interpolators one for the cartesian coordinates and the other for polar coordinates
         """
         cart_trajs, polar_trajs, times = [], [], []
+        TO_state_polar = np.array([np.pi/2, 0, self.slip_model.r0*0.8, 0])
+        TD_state_polar = None
         for cycle in self.gait_cycles:
             cart_trajs.extend([cycle.flight_cartesian_traj, cycle.stance_cartesian_traj])
             times.extend([cycle.t_flight, cycle.t_stance])
-            TO_state_initial = cycle.prev_take_off_state.copy()
-            TD_state_final = cycle.touch_down_state.copy()
+
+            # TO_state_initial = cycle.prev_take_off_state.copy()
+            TD_state_polar = cycle.stance_polar_traj[:, 0].copy()
             t_flight_end, t_flight_start = cycle.t_flight[(-1)], cycle.t_flight[0]
-            theta_dot_flight = (TD_state_final[THETA] - TO_state_initial[THETA]) / (t_flight_end - t_flight_start)
-            middle_angle = (TD_state_final[THETA] - TO_state_initial[THETA]) / 2 + TO_state_initial[THETA]
+            theta_dot_flight = (TO_state_polar[THETA] - TD_state_polar[THETA]) / (t_flight_end - t_flight_start)
+            middle_angle = (TD_state_polar[THETA] - TO_state_polar[THETA]) / 2 + TO_state_polar[THETA]
+
             middle_state = np.array([middle_angle, theta_dot_flight, 0.8 * self.slip_model.r0, 0.0])
-            TO_state_initial[THETA_DOT] = theta_dot_flight
-            TD_state_final[THETA_DOT] = theta_dot_flight
-            coarse_flight_traj_polar = np.stack([np.expand_dims(TO_state_initial, axis=1),
+            TO_state_polar[THETA_DOT] = theta_dot_flight
+            TD_state_polar[THETA_DOT] = theta_dot_flight
+            coarse_flight_traj_polar = np.hstack([np.expand_dims(TO_state_polar, axis=1),
                                                  np.expand_dims(middle_state, axis=1),
-                                                 np.expand_dims(TD_state_final, axis=1)],
-                                                axis=1)
+                                                 np.expand_dims(TD_state_polar, axis=1)])
             flight_duration = t_flight_end - t_flight_start
             flight_polar_traj = interp1d(x=[t_flight_start, t_flight_start + flight_duration / 2, t_flight_end],
                                          y=coarse_flight_traj_polar,
                                          kind='linear',
                                          axis=1,
                                          assume_sorted=True)(cycle.t_flight)
-            cycle_polar_trajectories = [
-                flight_polar_traj, cycle.stance_polar_traj]
+
+            cycle_polar_trajectories = [flight_polar_traj, cycle.stance_polar_traj]
             polar_trajs.extend(cycle_polar_trajectories)
+            # ___
+            TO_state_polar = cycle.stance_polar_traj[:, -1]
+
+
 
         final_cart_traj = np.concatenate(cart_trajs, axis=1)
         final_polar_traj = np.concatenate(polar_trajs, axis=1)
@@ -162,12 +169,12 @@ class SlipTrajectory:
         :param t: (ndarray, (float)) Time at which to calculate the gait phase value.
         :return: Cartesian (6, N) and Polar (4, N) states of the SLIP model. N refers to the length of the time vector
         """
-        assert self.start_time <= t <= self.end_time
+        t_gait = t % (self.end_time - self.start_time)
         if self._continuous_cart_traj is None or self._continuous_polar_traj is None:
             cart_traj, polar_traj = self.gen_continuous_trajectory()
             self._continuous_cart_traj = cart_traj
             self._continuous_polar_traj = polar_traj
-        return (self._continuous_cart_traj(t), self._continuous_polar_traj(t))
+        return (self._continuous_cart_traj(t_gait), self._continuous_polar_traj(t_gait))
 
     def get_target_forward_speed(self, t: Union[(float, ndarray)]):
         """
@@ -177,13 +184,11 @@ class SlipTrajectory:
         :param t: (ndarray, (float)) Time at which to calculate the gait phase value.
         :return: Target forward velocity (1, N). N refers to the length of the time vector
         """
-        if isinstance(t, float):
-            assert self.start_time <= t <= self.end_time
-        else:
-            assert np.all(np.logical_and(self.start_time <= t, t <= self.end_time))
+        t_gait = t % (self.end_time - self.start_time)
+
         if self._continuous_target_forward_vel is None:
             self._continuous_target_forward_vel = self.gen_continuous_target_forward_velocity()
-        return self._continuous_target_forward_vel(t)
+        return self._continuous_target_forward_vel(t_gait)
 
     def get_gait_phase(self, t: Union[(float, ndarray)]):
         """
@@ -193,13 +198,11 @@ class SlipTrajectory:
         :param t: (ndarray, (float)) Time at which to calculate the gait phase value.
         :return: Gait phase signal value computed at `t`
         """
-        if isinstance(t, float):
-            assert self.start_time <= t <= self.end_time
-        else:
-            assert np.all(np.logical_and(self.start_time <= t, t <= self.end_time))
+        t_gait = t % (self.end_time - self.start_time)
+
         if self._continuous_gait_phase is None:
             self._continuous_gait_phase = self.gen_continuous_gait_phase_signal()
-        phase = self._continuous_gait_phase(t)
+        phase = self._continuous_gait_phase(t_gait)
         if phase.size == 1:
             phase = float(phase)
         return phase
@@ -254,16 +257,18 @@ class SlipTrajectory:
         """
         if len(self) == 0:
             raise ValueError('Empty trajectory')
-        init_to_state = self.gait_cycles[0].prev_take_off_state
         last_x_pos = float(self.gait_cycles[(-1)].take_off_state[X])
         new_traj = copy.deepcopy(self)
         tmp_traj = copy.deepcopy(self)
         while new_traj.end_time < max_time:
             for cycle in tmp_traj.gait_cycles:
                 cycle.flight_cartesian_traj[X, :] += last_x_pos
+                cycle.foot_contact_pos += last_x_pos
                 cycle._stance_cartesian_traj = None
-
-            tmp_traj.set_initial_time(self.end_time)
+            tmp_traj.set_initial_time(new_traj.end_time)
             new_traj.append(tmp_traj)
 
         return new_traj
+
+    def __str__(self):
+        return "t[%.2f, %.2f]_cost[%s]" % (self.start_time, self.end_time, self.optimization_cost)
